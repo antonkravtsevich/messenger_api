@@ -17,11 +17,15 @@ router.post('/', function(req, res) {
     } else {
       // check if incoming password and password from db same
       // i mean, password hashes
-      if(!(password === user.password)){
-        //TODO wrong password handler
+      if(!user){
+        res.send({status: 'error', message: 'User with this username not found'});
       } else {
-        var jwt = JWT.create_JWT(user);
-        res.send({status: 'ok', jwt: jwt});
+        if(!(password === user.password)){
+          res.send({status: 'error', message: 'Wrong password'});
+        } else {
+          var jwt = JWT.create_JWT(user);
+          res.send({status: 'ok', jwt: jwt});
+        }
       }
     }
   })
