@@ -1,10 +1,11 @@
 var express = require('express');
 var router = express.Router();
-var sha1 = require('../cryptography/sha1')
+var sha1 = require('../cryptography/sha1');
+var isAuth = require('../controllers/auth');
 var UserModel = require('../models/users');
 
 /*POST user page*/
-router.post('/', function(req, res) {
+router.post('/', (req, res)=>{
   var user = new UserModel({
     username: req.body.username,
     password: sha1(req.body.password),
@@ -15,12 +16,12 @@ router.post('/', function(req, res) {
     }
   });
 
-  user.save(function(err){
+  user.save((err)=>{
     if (err) {
       if(err.code == 11000){
         //Ошибка валидации новой записи, не уникальный username
         res.status(404);
-        res.send({status: 'error', message: 'this username already exist'});
+        res.send({status: 'error', message: 'This username is already taken.'});
       }
       else {
         res.status(404);
@@ -29,20 +30,20 @@ router.post('/', function(req, res) {
     }
     else {
       res.status(200);
-      res.send({status: 'ok', message: 'user added'});
+      res.send({status: 'ok', message: 'Registration completed successfully'});
     }
   });
 });
 
-router.get('/', function(req, res){
-  UserModel.find(function(err, users) {
+router.get('/', (req, res)=>{
+  UserModel.find((err, users)=>{
     if (err){
       res.status(404);
       res.send({status: 'error', message: err});
     }
     else{
       res.status(200);
-      res.send({status: 'ok', message: users.map(function(user){
+      res.send({status: 'ok', message: users.map((user)=>{
         return {
           username: user.username,
           _id: user._id
@@ -52,14 +53,29 @@ router.get('/', function(req, res){
   });
 })
 
+router.get('/data', isAuth, (req, res) => {
+  user = res.locals.user;
+  res.send({status: 'ok',
+    message: {
+      _id: user._id,
+      username: user.username,
+      personal_data: user.personal_data
+    }
+  });
+})
+
 router.get('/:id', function(req, res){
-  UserModel.findById(req.params.id, function(err, user){
+  UserModel.findById(req.params.id, (err, user)=>{
     if(err){
       //TODO error handler
     }
     else{
       res.status(200);
-      res.send({status:'ok', message: user});
+      res.send({status:'ok', message: {
+        _id: user._id,
+        username: user.username,
+        personal_data: user.personal_data
+      }});
     }
   })
 })

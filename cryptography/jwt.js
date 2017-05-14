@@ -3,7 +3,7 @@ var Users = require('../models/users');
 var config = require('../config');
 
 //create JSON web token for user
-var create_JWT = function (user){
+var create_JWT = (user)=>{
   var tempstr = user.password+user._id+config.secret_key;
   var sign = sha1(tempstr);
   var jwt_string = JSON.stringify({id: user._id, sign: sign});
@@ -11,7 +11,7 @@ var create_JWT = function (user){
   return(jwt_base64_string);
 }
 
-var read_JWT = function (jwt_base64){
+var read_JWT = (jwt_base64)=>{
   var jwt_ascii = new Buffer(jwt_base64, 'base64').toString('ascii');
   return JSON.parse(jwt_ascii);
 }

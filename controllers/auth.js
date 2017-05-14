@@ -6,6 +6,7 @@ var JWT = require('../cryptography/jwt');
 
 var isAuth = function(req, res, next){
   var raw_jwt = req.get('jwt');
+
   if(!raw_jwt){
     res.status(401);
     res.send({status: 'error', message: 'not authorize'});

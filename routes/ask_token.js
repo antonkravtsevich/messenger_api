@@ -11,11 +11,12 @@ router.post('/', function(req, res) {
   var username = req.body.username;
   var password = sha1(req.body.password);
 
-  User.findOne({username: username}, function(err, user){
+  User.findOne({username: username}, (err, user)=>{
     if(err){
       //TODO err handler;
     } else {
-      // Проверка совпадения хранящегося и полученного паролей
+      // check if incoming password and password from db same
+      // i mean, password hashes
       if(!(password === user.password)){
         //TODO wrong password handler
       } else {

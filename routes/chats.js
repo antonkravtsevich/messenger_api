@@ -18,27 +18,33 @@ var MessageModel = require('../models/messages');
 
 function messagesQuery(ids){
   var query = MessageModel.find({_id:{
-    $in: ids.map(function(id){return mongoose.Types.ObjectId(id); })
+    $in: ids.map((id)=>{return mongoose.Types.ObjectId(id); })
   }});
   return query;
 }
 
-function getAllMessagesFromOneChat(ids){
-  return map(messagesQuery(ids).exec())
+function getRightId(id_mass, id){
+  if(id_mass[0]==id) return id_mass[1];
+  else return id_mass[0];
 }
 
-router.get('/', isAuth, function(req, res){
-  ChatModel.find({users: res.locals.user._id}, function(err, chats){
+router.get('/', isAuth, (req, res)=>{
+  ChatModel.find({users: res.locals.user._id}, (err, chats)=>{
     if(err) devErrHandler(500, err);
     else {
       res.status(200);
       res.send({
         status: 'ok',
         //get only necessary fields
-        message: chats.map(function(chat){
+        message: chats.map((chat)=>{
+          //DEBUG
+          //console.log('___________________');
+          //console.log('mass: '+chat.users);
+          //console.log('current: '+res.locals.user._id);
+          //console.log('right: '+getRightId(chat.users, res.locals.user._id));
           return{
             _id: chat.id,
-            users: chat.users,
+            companion_id: getRightId(chat.users, res.locals.user._id),
             date: chat.last_date
           };
         })
@@ -47,16 +53,39 @@ router.get('/', isAuth, function(req, res){
   })
 });
 
+router.get('/by_users/:user_id', isAuth, (req, res)=>{
+  //console.log('req.params.user_id: '+req.params.user_id);
+  //console.log('res.locals.user._id: '+res.locals.user._id);
+  if(req.params.user_id !== res.locals.user._id){
+    ChatModel.findOne({users: {$all: [req.params.user_id, res.locals.user._id]}}, (err, chat)=>{
+      if(!chat){
+        //console.log('chat not found');
+        new_chat = new ChatModel({
+          users: [req.params.user_id, res.locals.user._id]
+        });
+        new_chat.save((err)=>{if(err) devErrHandler(500, err)});
+        res.status(200);
+        res.send({status: 'ok', message: new_chat._id});
+      } else {
+        //console.log('chat already exist');
+        //console.log(JSON.stringify(chat));
+        res.status(200);
+        res.send({status: 'ok', message: chat._id});
+      }
+    })
+  }
+})
+
 // TODO create pagination
-router.get('/:chat_id', isAuth, function(req, res){
-  ChatModel.findById(req.params.chat_id, function(err, chat){
+router.get('/:chat_id', isAuth, (req, res)=>{
+  //console.log('get chat by id');
+  ChatModel.findById(req.params.chat_id, (err, chat)=>{
     if(!chat){
       res.status(404);
       res.send({status: 'error', message: 'wrong query'});
     }
     else{
-      console.log(chat.users);
-      console.log(res.locals.user._id);
+
       if(chat.users.indexOf(res.locals.user._id) == -1){
         res.status(401);
         res.send({status: 'error', message: 'access denied'});
@@ -67,19 +96,20 @@ router.get('/:chat_id', isAuth, function(req, res){
           // chat.message contain an array of message ids
           // with below method we get messages with ids that chat.message contained
           MessageModel.find({_id:{
-            $in: chat.messages.map(function(id){return mongoose.Types.ObjectId(id); })
+            $in: chat.messages.map((id)=>{return mongoose.Types.ObjectId(id); })
           }}, function(err, messages){
             if(err) devErrHandler(500, err);
             else{
               res.status(200);
               res.send({
                 status: 'ok',
-                // get only necessary fields
-                message: messages.map(function(message){
+                // get only neccesery fields
+                message: messages.map((message)=>{
                   return{
                     _id: message._id,
                     text: message.text,
-                    date: message.date
+                    date: message.date,
+                    sender_id: message.sender_id
                   }
                 })
               });

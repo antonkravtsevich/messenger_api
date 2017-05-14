@@ -20,7 +20,7 @@ router.post('/', isAuth, (req, res)=>{
   var reciever_id = req.body.reciever;
   var date = datetime.create().format('Y.m.d.H.M.S.N');
 
-  ChatModel.findOne({users: sender_id, users: reciever_id}, (err, chat)=>{
+  ChatModel.findOne({users: {$all: [sender_id, reciever_id]}}, (err, chat)=>{
     if(err) devErrHandler(500, err);
     else{
       if(!chat){
@@ -34,7 +34,8 @@ router.post('/', isAuth, (req, res)=>{
       var message = new MessageModel({
         text: req.body.text,
         date: date,
-        chat_id: chat._id
+        chat_id: chat._id,
+        sender_id: sender_id
       });
 
       message.save((err, msg)=>{

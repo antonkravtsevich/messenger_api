@@ -7,12 +7,12 @@ var UserModel = require('../models/users');
 var devErrHandler = require('../controllers/develop_error_handler');
 var isAuth = require('../controllers/auth');
 
-router.get('/', isAuth, function(req, res){
+router.get('/', isAuth, (req, res)=>{
   res.status(200);
   res.send({status:'ok', message: res.locals.user.contacts});
 })
 
-router.post('/', isAuth, function(req, res){
+router.post('/', isAuth, (req, res)=>{
   UserModel.findByIdAndUpdate(
     res.locals.user._id,
     {$push: {'contacts': req.body.new_contact}},
@@ -27,7 +27,7 @@ router.post('/', isAuth, function(req, res){
   )
 })
 
-router.delete('/:contact', isAuth, function(req, res){
+router.delete('/:contact', isAuth, (req, res)=>{
   UserModel.findByIdAndUpdate(
     res.locals.user._id,
     {$pull: {'contacts': req.params.contact}},
