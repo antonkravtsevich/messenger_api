@@ -3,6 +3,8 @@ var router = express.Router();
 var sha1 = require('../cryptography/sha1');
 var isAuth = require('../controllers/auth');
 var UserModel = require('../models/users');
+var ChatModel = require('../models/chats');
+var MessageModel = require('../models/messages');
 
 /*POST user page*/
 router.post('/', (req, res)=>{
@@ -55,6 +57,26 @@ router.put('/', isAuth, (req, res) => {
       }
     }
   )
+})
+
+router.delete('/', isAuth, (req, res) => {
+  var user = res.locals.user;
+  ChatModel.find({users: user._id}, (err, chats) => {
+    chats.forEach((chat) => {
+      MessageModel.find({_id:{
+        $in: chat.messages.map((id)=>{return mongoose.Types.ObjectId(id); })
+      }}).remove().exec();
+    })
+  });
+  ChatModel.find({users: user._id}).remove().exec();
+  UserModel.findById(user._id).remove((err) => {
+    if(err){
+      devErrHandler(500, err);
+    }else{
+      res.status(200);
+      res.send({status: 'ok', message: 'Deleting successfull'});
+    }
+  })
 })
 
 router.get('/', (req, res)=>{
