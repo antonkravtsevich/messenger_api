@@ -35,6 +35,28 @@ router.post('/', (req, res)=>{
   });
 });
 
+router.put('/', isAuth, (req, res) => {
+  user = res.locals.user;
+  var new_pd={
+    first_name: req.body.first_name,
+    last_name: req.body.last_name,
+    email: req.body.email
+  };
+  UserModel.update(
+    {username: user.username},
+    {$set:{personal_data: new_pd}},
+    function (err) {
+      if(err){
+        res.status(404);
+        res.send({status: 'error', message: err});
+      } else {
+        res.status(200);
+        res.send({status: 'ok', message: 'Updating finished succesfully'});
+      }
+    }
+  )
+})
+
 router.get('/', (req, res)=>{
   UserModel.find((err, users)=>{
     if (err){
