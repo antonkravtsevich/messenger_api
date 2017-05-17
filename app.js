@@ -24,7 +24,6 @@ var messages = require('./routes/messages');
 var chats = require('./routes/chats');
 var ask_token = require('./routes/ask_token');
 var contacts = require('./routes/contacts');
-
 var app = express();
 
 // view engine setup
@@ -33,6 +32,7 @@ app.set('view engine', 'jade');
 
 app.use(favicon());
 app.use(logger('dev'));
+app.use(require('./controllers/rt'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 

@@ -8,8 +8,7 @@ var UserSchema = new Schema({
     first_name: {type: String},
     last_name: {type: String},
     email: {type: String, require: true}
-  },
-  contacts: [String],
+  }
 })
 
 module.exports = mongoose.model('users', UserSchema);

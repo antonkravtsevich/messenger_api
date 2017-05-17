@@ -5,6 +5,7 @@ var isAuth = require('../controllers/auth');
 var UserModel = require('../models/users');
 var ChatModel = require('../models/chats');
 var MessageModel = require('../models/messages');
+var logger = require('../controllers/logger');
 
 /*POST user page*/
 router.post('/', (req, res)=>{
@@ -21,7 +22,7 @@ router.post('/', (req, res)=>{
   user.save((err)=>{
     if (err) {
       if(err.code == 11000){
-        //Ошибка валидации новой записи, не уникальный username
+        //Validation error, not unique username
         res.status(404);
         res.send({status: 'error', message: 'This username is already taken.'});
       }
@@ -90,7 +91,8 @@ router.get('/', (req, res)=>{
       res.send({status: 'ok', message: users.map((user)=>{
         return {
           username: user.username,
-          _id: user._id
+          _id: user._id,
+          personal_data: user.personal_data
         };
       })});
     }
