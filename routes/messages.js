@@ -5,6 +5,7 @@ var datetime = require('node-datetime');
 var router = express.Router();
 
 // custom models
+var UserModel = require('../models/users');
 var MessageModel = require('../models/messages');
 var ChatModel = require('../models/chats');
 
@@ -20,38 +21,48 @@ router.post('/', isAuth, (req, res)=>{
   var reciever_id = req.body.reciever;
   var date = datetime.create().format('Y.m.d.H.M.S.N');
 
+  //console.log('req.body: '+JSON.stringify(req.body));
+  //console.log('reciever_id: '+reciever_id);
+
   ChatModel.findOne({users: {$all: [sender_id, reciever_id]}}, (err, chat)=>{
     if(err) devErrHandler(500, err);
     else{
-      if(!chat){
-        chat = new ChatModel({
-          users: [sender_id, reciever_id]
-        });
-
-        chat.save((err)=>{if(err) devErrHandler(500, err)});
-      }
-
       var message = new MessageModel({
         text: req.body.text,
         date: date,
-        chat_id: chat._id,
         sender_id: sender_id
       });
-
-      message.save((err, msg)=>{
+      message.save((err) => {
         if(err) devErrHandler(500, err);
-        else{
-          chat.date = date;
-          chat.messages.push(msg._id);
-          chat.save((err)=>{
+      });
+
+      if(chat){
+        chat.messages.push(message);
+        chat.last_date = date;
+        chat.save((err) => {
+          if(err) devErrHandler(500, err);
+          else{
+            res.status(200);
+            res.send({status: 'ok', message: 'message sent'});
+          }
+        });
+      } else {
+        UserModel.findById(reciever_id, (err, user) => {
+          chat = new ChatModel();
+          chat.messages.push(message);
+          chat.users.push(res.locals.user);
+          console.log("USER: "+JSON.stringify(user));
+          chat.users.push(user);
+          chat.last_date = date;
+          chat.save((err) => {
             if(err) devErrHandler(500, err);
             else{
               res.status(200);
               res.send({status: 'ok', message: 'message sent'});
             }
           })
-        }
-      })
+        })
+      }
     }
   })
 })

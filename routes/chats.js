@@ -15,68 +15,70 @@ Promise.promisifyAll(mongoose);
 // custom models
 var ChatModel = require('../models/chats');
 var MessageModel = require('../models/messages');
+var UserModel = require('../models/users');
 
-function messagesQuery(ids){
-  var query = MessageModel.find({_id:{
-    $in: ids.map((id)=>{return mongoose.Types.ObjectId(id); })
-  }});
-  return query;
-}
-
+/*
 function getRightId(id_mass, id){
   if(id_mass[0]==id) return id_mass[1];
   else return id_mass[0];
 }
+*/
 
-router.get('/', isAuth, (req, res)=>{
-  ChatModel.find({users: res.locals.user._id}, (err, chats)=>{
-    if(err) devErrHandler(500, err);
-    else {
-      res.status(200);
-      res.send({
-        status: 'ok',
-        //get only necessary fields
-        message: chats.map((chat)=>{
-          //DEBUG
-          //console.log('___________________');
-          //console.log('mass: '+chat.users);
-          //console.log('current: '+res.locals.user._id);
-          //console.log('right: '+getRightId(chat.users, res.locals.user._id));
-          return{
-            _id: chat.id,
-            companion_id: getRightId(chat.users, res.locals.user._id),
-            date: chat.last_date
-          };
-        })
-      });
-    }
-  })
-});
+function getChatById(res, chat_id, current_user){
+  ChatModel.findById(chat_id)
+    .populate('users', '_id username personal_data', {_id: {'$ne': current_user._id}})
+    .populate('messages', '_id text date sender_id')
+    .exec((err, result) => {
+      if(err) devErrHandler(500, err);
+      else {
+        res.status(200);
+        res.send({status: 'ok', message: result});
+      }
+    })
+}
 
+//all chats for current user
+router.get('/', isAuth, (req, res) => {
+  ChatModel.find({users: res.locals.user._id})
+  .populate('users', '_id username personal_data', {_id: {'$ne': res.locals.user._id}})
+  .populate('messages', '_id text date sender_id')
+  .exec((err, result) => {
+    res.status(200);
+    res.send({status: 'ok', message: result})
+  });
+})
+
+//get id of two users chat
 router.get('/by_users/:user_id', isAuth, (req, res)=>{
-  //console.log('req.params.user_id: '+req.params.user_id);
-  //console.log('res.locals.user._id: '+res.locals.user._id);
-  if(req.params.user_id !== res.locals.user._id){
+  console.log('req.params.user_id: '+req.params.user_id);
+  console.log('res.locals.user._id: '+res.locals.user._id);
+  if(req.params.user_id != res.locals.user._id){
+    console.log('users ids is not same');
     ChatModel.findOne({users: {$all: [req.params.user_id, res.locals.user._id]}}, (err, chat)=>{
       if(!chat){
-        //console.log('chat not found');
-        new_chat = new ChatModel({
-          users: [req.params.user_id, res.locals.user._id]
+        console.log('chat not found');
+        UserModel.findById(req.params.user_id, (err, user) => {
+          if(err) console.log('error: '+JSON.stringify(err, null, 2));
+          console.log('user: '+JSON.stringify(user, null, 2));
+          new_chat = new ChatModel();
+          new_chat.users.push(res.locals.user);
+          new_chat.users.push(user);
+          new_chat.save((err)=>{
+            if(err) devErrHandler(500, err);
+            else {
+              console.log('new chat created');
+              getChatById(res, new_chat._id, res.locals.user);
+            }
+          });
         });
-        new_chat.save((err)=>{if(err) devErrHandler(500, err)});
-        res.status(200);
-        res.send({status: 'ok', message: new_chat._id});
       } else {
-        //console.log('chat already exist');
-        //console.log(JSON.stringify(chat));
-        res.status(200);
-        res.send({status: 'ok', message: chat._id});
+        getChatById(res, chat._id, res.locals.user);
       }
     })
   }
 })
 
-// TODO create pagination
+//get all messages on chat_id
 router.get('/:chat_id', isAuth, (req, res)=>{
   //console.log('get chat by id');
   ChatModel.findById(req.params.chat_id, (err, chat)=>{
@@ -93,28 +95,7 @@ router.get('/:chat_id', isAuth, (req, res)=>{
       else{
         if(err) devErrHandler(500, err);
         else{
-          // chat.message contain an array of message ids
-          // with below method we get messages with ids that chat.message contained
-          MessageModel.find({_id:{
-            $in: chat.messages.map((id)=>{return mongoose.Types.ObjectId(id); })
-          }}, function(err, messages){
-            if(err) devErrHandler(500, err);
-            else{
-              res.status(200);
-              res.send({
-                status: 'ok',
-                // get only neccesery fields
-                message: messages.map((message)=>{
-                  return{
-                    _id: message._id,
-                    text: message.text,
-                    date: message.date,
-                    sender_id: message.sender_id
-                  }
-                })
-              });
-            }
-          });
+            getChatById(res, req.params.chat_id, res.locals.user);
         }
       }
     }
