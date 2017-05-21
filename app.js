@@ -32,7 +32,6 @@ app.set('view engine', 'jade');
 
 app.use(favicon());
 app.use(logger('dev'));
-//app.use(require('./controllers/rt'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 
