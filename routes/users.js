@@ -80,8 +80,6 @@ router.delete('/', isAuth, (req, res) => {
 })
 
 router.get('/', (req, res)=>{
-  //DEBUG
-  console.log('USERS: GET("/") '+req.route.path);
 
   UserModel.find((err, users)=>{
     if (err){
@@ -113,8 +111,6 @@ router.get('/data', isAuth, (req, res) => {
 });
 
 router.get('/:id', function(req, res){
-  //DEBUG
-  console.log('USERS: GET("/:id") '+req.route.path);
   UserModel.findById(req.params.id, (err, user)=>{
     if(err){
       //TODO error handler
