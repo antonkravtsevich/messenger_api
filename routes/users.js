@@ -5,7 +5,6 @@ var isAuth = require('../controllers/auth');
 var UserModel = require('../models/users');
 var ChatModel = require('../models/chats');
 var MessageModel = require('../models/messages');
-var logger = require('../controllers/logger');
 
 /*POST user page*/
 router.post('/', (req, res)=>{
