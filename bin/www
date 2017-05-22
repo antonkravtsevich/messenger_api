@@ -2,9 +2,28 @@
 
 var debug = require('debug')('my-application');
 var app = require('../app');
+var soap = require('soap');
+var pd = require('pretty-data').pd;
+
+var myService = require('../service/soap_service').myService;
+var xml = require('../service/soap_service').xml;
+
 
 app.set('port', process.env.PORT || 3001);
 
 var server = app.listen(app.get('port'), ()=> {
   debug('Express server listening on port ' + server.address().port);
 });
+var soap_server = soap.listen(server, '/wsdl', myService, xml);
+soap_server.log = function (type, data) {
+  if(type == 'received'){
+    console.log("SOAP_SERVICE: RECIEVED");
+    console.log(pd.xml(data));
+    console.log('---------------------');
+  }
+  if(type == 'replied'){
+    console.log('SOAP_SERVICE: REPLIED');
+    console.log(pd.xml(data));
+    console.log('---------------------');
+  }
+}

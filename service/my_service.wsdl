@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions
+        xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+        xmlns:tns="http://188.166.93.46:3001/"
+        xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        xmlns:http="http://schemas.xmlsoap.org/wsdl/http/"
+        xmlns="http://schemas.xmlsoap.org/wsdl/"
+        name="ReviewWsdl">
+    <!-- Types description -->
+    <types>
+        <xs:schema
+                xmlns:tns="http://schemas.xmlsoap.org/wsdl/"
+                xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                elementFormDefault="qualified"
+                targetNamespace="http://188.166.93.46:3001/">
+            <xs:element name="Request">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="_id" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="Response">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="first_name" type="xs:string"/>
+                        <xs:element name="last_name" type="xs:string"/>
+                        <xs:element name="email" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+    </types>
+    <!-- addReview procedure messages -->
+    <message name="getDataRequest">
+        <part name="Request" element="tns:Request"/>
+    </message>
+    <message name="getDataResponse">
+        <part name="Response" element="tns:Response"/>
+    </message>
+    <!-- Binding of procedure to messages -->
+    <portType name="MessengerServicePortType">
+        <operation name="getData">
+            <input message="tns:getDataRequest"/>
+            <output message="tns:getDataResponse"/>
+        </operation>
+    </portType>
+    <!-- Service procedures format -->
+    <binding name="MessengerServiceBinding" type="tns:MessengerServicePortType">
+        <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="getData">
+            <soap:operation soapAction=""/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+    </binding>
+    <!-- Service definition -->
+    <service name="MessengerService">
+        <port name="MessengerServicePort" binding="tns:MessengerServiceBinding">
+            <soap:address location="http://188.166.93.46:3001/wsdl"/>
+        </port>
+    </service>
+</definitions>
